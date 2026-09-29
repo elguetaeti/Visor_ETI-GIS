@@ -1,0 +1,139 @@
+@import 'tailwindcss';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+
+/*
+ * Tokens de diseño — "instrumento cartográfico"
+ * Paleta oscura tipo mesa de topógrafo / carta náutica nocturna:
+ * azul pizarra profundo de fondo, acentos teal (agua/curvas de nivel)
+ * y ámbar (marcadores activos / advertencias). Tipografía geométrica
+ * para UI + monoespaciada para coordenadas y datos, como en
+ * instrumentos de navegación reales.
+ */
+@theme {
+  --color-bg: #0b1220;
+  --color-surface: #121a2c;
+  --color-surface-alt: #1a2438;
+  --color-border: #29354e;
+  --color-accent: #45d4c4;
+  --color-accent-dim: #2a7d73;
+  --color-warn: #f2a65a;
+  --color-text: #e8edf7;
+  --color-text-muted: #8b98b8;
+
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Barra de desplazamiento discreta, coherente con el tono "instrumento" */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Popups de MapLibre: recoloreados para calzar con la paleta oscura */
+.maplibregl-popup-content {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  font-family: var(--font-body);
+  padding: 0;
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--color-surface) !important;
+  border-bottom-color: var(--color-surface) !important;
+}
+.maplibregl-popup-close-button {
+  color: var(--color-text-muted);
+  font-size: 18px;
+  padding: 4px 8px;
+}
+.maplibregl-popup-close-button:hover {
+  color: var(--color-text);
+  background: transparent;
+}
+
+/* Contenido del popup de atributos (ver layerService.renderAttributePopupHTML) */
+.attribute-popup {
+  min-width: 180px;
+  max-width: 280px;
+}
+.attribute-popup__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background-color: var(--color-surface-alt);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.attribute-popup__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.attribute-popup__table tr:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+.attribute-popup__table td {
+  padding: 6px 14px;
+  vertical-align: top;
+}
+.popup-key {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.popup-value {
+  color: var(--color-text);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Escala gráfica de MapLibre, recoloreada para calzar con el tema oscuro */
+.maplibregl-ctrl-scale {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-text-muted) !important;
+  color: var(--color-text-muted) !important;
+  font-family: var(--font-mono);
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib {
+  background-color: transparent !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-text-muted) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
