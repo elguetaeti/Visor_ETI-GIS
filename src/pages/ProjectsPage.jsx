@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
-import { fetchUserProjects, createProject } from '../services/projectService.js';
+import { fetchUserProjects, createProject, deleteProject } from '../services/projectService.js';
 import { APP_BRANDING } from '../config/mapConfig.js';
 
 const ROLE_LABELS = { admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' };
@@ -48,6 +48,19 @@ export default function ProjectsPage() {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, '')
       );
+    }
+  };
+
+  const handleDelete = async (project) => {
+    const ok = window.confirm(
+      `¿Eliminar el proyecto "${project.name}"?\n\nDejará de aparecer, pero sus datos se conservan en Supabase.`
+    );
+    if (!ok) return;
+    try {
+      await deleteProject(project.id);
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -107,16 +120,24 @@ export default function ProjectsPage() {
         ) : (
           <ul className="mb-8 flex flex-col gap-2">
             {projects.map((project) => (
-              <li key={project.id}>
+              <li key={project.id} className="flex items-stretch gap-2">
                 <Link
                   to={`/project/${project.slug}`}
-                  className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 hover:border-[var(--color-accent-dim)]"
+                  className="flex flex-1 items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 hover:border-[var(--color-accent-dim)]"
                 >
                   <span className="text-sm text-[var(--color-text)]">{project.name}</span>
                   <span className="rounded bg-[var(--color-surface-alt)] px-2 py-0.5 text-[10px] uppercase text-[var(--color-text-muted)]">
                     {ROLE_LABELS[project.role] ?? project.role}
                   </span>
                 </Link>
+                {project.role === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(project)}
+                    className="rounded-lg border border-[var(--color-border)] px-3 text-xs text-red-400 hover:border-red-400"
+                  >
+                    Eliminar
+                  </button>
+                )}
               </li>
             ))}
           </ul>

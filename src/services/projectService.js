@@ -14,6 +14,7 @@ export async function fetchProjectBySlug(slug) {
     .from('projects')
     .select('id, slug, name, config')
     .eq('slug', slug)
+    .is('deleted_at', null)
     .single();
   if (error) throw error;
   return data;
@@ -75,8 +76,9 @@ export async function removeMember(permissionId) {
 export async function fetchUserProjects(userId) {
   const { data, error } = await supabase
     .from('permissions')
-    .select('role, projects(id, slug, name)')
-    .eq('user_id', userId);
+    .select('role, projects!inner(id, slug, name, deleted_at)')
+    .eq('user_id', userId)
+    .is('projects.deleted_at', null);
   if (error) throw error;
   return data.map((row) => ({ ...row.projects, role: row.role }));
 }
@@ -94,4 +96,17 @@ export async function createProject(name, slug) {
   });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Borrado suave: marca el proyecto como eliminado (`deleted_at`) sin
+ * borrar datos; capas, dibujos y permisos siguen en Supabase y se
+ * pueden recuperar quitando ese valor desde el SQL Editor.
+ */
+export async function deleteProject(projectId) {
+  const { error } = await supabase
+    .from('projects')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', projectId);
+  if (error) throw error;
 }

@@ -92,6 +92,7 @@ function rowToFeature(row) {
       drawColor: row.style?.color ?? DEFAULT_DRAWING_STYLE.color,
       drawSize: row.style?.size ?? DEFAULT_DRAWING_STYLE.size,
       label: row.label ?? undefined,
+      attributes: row.attributes ?? {},
     },
     geometry: row.geojson,
   };
@@ -116,12 +117,15 @@ const MODE_BY_TOOL = {
  * y puede eliminar todos, para poder moderar).
  * ------------------------------------------------------------------
  */
-export function useDrawings(projectId, canDraw, isAdmin) {
+export function useDrawings(projectId, canDraw, isAdmin, customFields = []) {
   const { map, isLoaded, isDrawingRef } = useMapContext();
   const { user } = useAuth();
   const [draw, setDraw] = useState(null);
   const [activeTool, setActiveTool] = useState(null);
   const [selected, setSelected] = useState(null);
+  // { seqId, rowId, featureId } mientras el usuario llena los campos personalizados.
+  const [pendingAttributes, setPendingAttributes] = useState(null);
+  const hasFields = customFields.length > 0;
 
   const drawRef = useRef(null);
   const loadedRef = useRef(false);
@@ -178,6 +182,11 @@ export function useDrawings(projectId, canDraw, isAdmin) {
 
       const row = await persistNewFeature(feature.id, feature.geometry, feature.geometry.type);
       if (!row) return;
+
+      if (hasFields) {
+        setPendingAttributes({ seqId: row.seq_id, rowId: row.id, featureId: feature.id });
+        return;
+      }
 
       const label = window.prompt(`Entidad #${row.seq_id} — descripción (opcional):`);
       if (label && label.trim()) {
@@ -236,7 +245,7 @@ export function useDrawings(projectId, canDraw, isAdmin) {
       map.off('draw.delete', onDelete);
       map.off('draw.selectionchange', onSelectionChange);
     };
-  }, [map, draw, user, isAdmin, persistNewFeature]);
+  }, [map, draw, user, isAdmin, persistNewFeature, hasFields]);
 
   // Carga inicial: los dibujos que puedo ver (los míos, o todos si soy admin — RLS ya lo filtra).
   useEffect(() => {
@@ -353,7 +362,26 @@ export function useDrawings(projectId, canDraw, isAdmin) {
     await persistNewFeature(newId, offsetGeometry, offsetGeometry.type);
   }, [draw, selected, user, persistNewFeature]);
 
+  const submitAttributes = useCallback(
+    (values) => {
+      const pending = pendingAttributes;
+      setPendingAttributes(null);
+      if (!pending || !draw) return;
+      draw.setFeatureProperty(pending.featureId, 'attributes', values);
+      updateDrawing(pending.rowId, { attributes: values }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[useDrawings] Error guardando atributos:', err);
+      });
+    },
+    [pendingAttributes, draw]
+  );
+
+  const skipAttributes = useCallback(() => setPendingAttributes(null), []);
+
   return {
+    pendingAttributes,
+    submitAttributes,
+    skipAttributes,
     canDraw: Boolean(canDraw && user),
     activeTool,
     setTool,
