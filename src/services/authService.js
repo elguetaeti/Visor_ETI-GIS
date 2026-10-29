@@ -24,6 +24,13 @@ export async function signUp(email, password, fullName) {
   return data;
 }
 
+/** Sesión de invitado: usuario real de Supabase pero sin correo ni contraseña. */
+export async function signInAsGuest() {
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) throw error;
+  return data;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

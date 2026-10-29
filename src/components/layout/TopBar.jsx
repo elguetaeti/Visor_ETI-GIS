@@ -61,12 +61,12 @@ export default function TopBar({ project, permissions, onOpenAdmin }) {
                 Administrar
               </button>
             )}
-            <span className="hidden text-[var(--color-text-muted)] sm:inline">{user.email}</span>
+            <span className="hidden text-[var(--color-text-muted)] sm:inline">{user.is_anonymous ? 'Invitado' : user.email}</span>
             <Link
               to="/login"
               className="rounded-md border border-[var(--color-border)] px-2.5 py-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             >
-              Cuenta
+              {user.is_anonymous ? 'Tengo cuenta' : 'Cuenta'}
             </Link>
           </>
         ) : (

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { redeemInvite } from '../services/inviteService.js';
+import { signInAsGuest } from '../services/authService.js';
 import LoginForm from '../components/auth/LoginForm.jsx';
 import { APP_BRANDING } from '../config/mapConfig.js';
 
@@ -20,6 +21,18 @@ export default function InvitePage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('idle'); // idle | redeeming | error
   const [error, setError] = useState(null);
+  const [wantsLogin, setWantsLogin] = useState(false);
+  const guestTried = useRef(false);
+
+  // Sin sesión: entra como invitado automáticamente (sin registro).
+  useEffect(() => {
+    if (loading || user || wantsLogin || guestTried.current) return;
+    guestTried.current = true;
+    signInAsGuest().catch((err) => {
+      setError(err.message ?? 'No se pudo entrar como invitado.');
+      setStatus('error');
+    });
+  }, [loading, user, wantsLogin]);
 
   useEffect(() => {
     if (loading || !user || status !== 'idle') return;
@@ -44,13 +57,17 @@ export default function InvitePage() {
         {APP_BRANDING.name}
       </span>
 
-      {!user && (
+      {!user && wantsLogin && (
         <>
           <p className="max-w-sm text-center text-sm text-[var(--color-text-muted)]">
             Inicia sesión o crea una cuenta para aceptar esta invitación.
           </p>
           <LoginForm />
         </>
+      )}
+
+      {!user && !wantsLogin && status !== 'error' && (
+        <p className="text-sm text-[var(--color-text-muted)]">Entrando como invitado…</p>
       )}
 
       {user && status === 'redeeming' && (
