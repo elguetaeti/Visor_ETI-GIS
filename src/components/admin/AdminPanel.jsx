@@ -3,6 +3,8 @@ import LayerUploader from './LayerUploader.jsx';
 import LayerManager from './LayerManager.jsx';
 import ShareLinks from './ShareLinks.jsx';
 import UserManager from './UserManager.jsx';
+import ExportPanel from './ExportPanel.jsx';
+import CustomFieldsManager from './CustomFieldsManager.jsx';
 
 /**
  * AdminPanel
@@ -13,13 +15,15 @@ import UserManager from './UserManager.jsx';
  * de administración, no de edición de contenido).
  * ------------------------------------------------------------------
  */
-export default function AdminPanel({ project, layers, isAdmin, onClose }) {
+export default function AdminPanel({ project, layers, isAdmin, customFields, onFieldsChange, onClose }) {
   const [tab, setTab] = useState('manage');
 
   const tabs = [
     { id: 'manage', label: 'Capas del proyecto' },
     { id: 'upload', label: 'Subir nueva' },
     ...(isAdmin ? [{ id: 'share', label: 'Compartir' }] : []),
+    ...(isAdmin ? [{ id: 'fields', label: 'Campos' }] : []),
+    ...(isAdmin ? [{ id: 'export', label: 'Exportar' }] : []),
     ...(isAdmin ? [{ id: 'users', label: 'Usuarios' }] : []),
   ];
 
@@ -60,6 +64,10 @@ export default function AdminPanel({ project, layers, isAdmin, onClose }) {
           <LayerUploader projectId={project.id} onUploaded={() => setTab('manage')} />
         )}
         {tab === 'share' && isAdmin && <ShareLinks projectId={project.id} />}
+        {tab === 'fields' && isAdmin && (
+          <CustomFieldsManager project={project} fields={customFields} onChange={onFieldsChange} />
+        )}
+        {tab === 'export' && isAdmin && <ExportPanel project={project} customFields={customFields} />}
         {tab === 'users' && isAdmin && <UserManager projectId={project.id} />}
       </div>
     </div>
